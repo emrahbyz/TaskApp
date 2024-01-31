@@ -1,52 +1,62 @@
-import './App.css'
-import TaskCreate from './components/TaskCreate'
-import TaskList from './components/TaskList'
-
-import { useState } from 'react'
+import "./App.css";
+import TaskCreate from "./components/TaskCreate";
+import TaskList from "./components/TaskList";
+import { useEffect, useState } from "react";
+import axios from "axios";
 function App() {
-  
-
-  const [tasks, setTasks] = useState([])
-  const createTask =(title,taskDesc)=>{
-     const createdTaks=[
-      ...tasks,{
-        id:Math.round(Math.random()*999999),
-        title,
-        taskDesc
-      }
-     ]
-     setTasks(createdTaks)
-  }
-  
-  const deleteTaskById =(id) =>{
-   const afterDeletingTasks= tasks.filter((task) =>{
-      return task.id !==id;
-    })
-    setTasks(afterDeletingTasks)
-
+  const [tasks, setTasks] = useState([]);
+  const createTask = async (title, taskDesc) => {
+    const response = await axios.post("http://localhost:3004/taks", {
+      title,
+      taskDesc,
+    });
+    console.log(response);
+    const createdTaks = [...tasks, response.data];
+    setTasks(createdTaks);
   };
-  const editTaskById =(id,updatedTitle,updatedTaskDesc
-    ) =>{
-    const updatedTasks= tasks.map((task) =>{
-      if(task.id ===id){
-        return {id,title:updatedTitle,taskDesc:updatedTaskDesc}
+  const fetchTasks = async () => {
+    const response = await axios.get("http://localhost:3004/taks");
+    setTasks(response.data);
+  };
 
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const deleteTaskById = async (id) => {
+    await axios.delete(`http://localhost:3004/taks/${id}`);
+    const afterDeletingTasks = tasks.filter((task) => {
+      return task.id !== id;
+    });
+    setTasks(afterDeletingTasks);
+  };
+  const editTaskById = async (id, updatedTitle, updatedTaskDesc) => {
+    await axios.put(`http://localhost:3004/taks/${id}`, {
+      title: updatedTitle,
+      taskDesc: updatedTaskDesc,
+    });
+    const updatedTasks = tasks.map((task) => {
+      if (task.id === id) {
+        return { id, title: updatedTitle, taskDesc: updatedTaskDesc };
       }
-      return task
-     })
-     setTasks(updatedTasks)
- 
-   };
-  
-  return ( 
+      return task;
+    });
+    setTasks(updatedTasks);
+  };
+
+  return (
     <>
-     <div className="App">
-      <TaskCreate onCreate={createTask} />
-      <h1>Görevler</h1>
-      <TaskList tasks={tasks} onDelete={deleteTaskById} onUpdate={editTaskById} />
-     </div>
+      <div className="App">
+        <TaskCreate onCreate={createTask} />
+        <h1>Görevler</h1>
+        <TaskList
+          tasks={tasks}
+          onDelete={deleteTaskById}
+          onUpdate={editTaskById}
+        />
+      </div>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
